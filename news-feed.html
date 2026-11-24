@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>News Feed</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #news-container {
+      max-width: 700px;
+      margin: auto;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .card img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+    .card-body {
+      padding: 15px;
+    }
+    .card-body h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    .card-body p {
+      color: #444;
+    }
+    .info {
+      font-size: 14px;
+      color: #777;
+    }
+    .buttons {
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #message {
+      text-align: center;
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Latest News</h1>
+
+  <div id="message"></div>
+  <div id="news-container"></div>
+
+  <div class="buttons">
+    <button id="load-more">Load More</button>
+    <button id="refresh">Refresh</button>
+  </div>
+
+  <script>
+    // Free API: no API key needed
+    const API_URL = "https://api.spaceflightnewsapi.net/v4/articles/";
+    const LIMIT = 5;      // articles per request
+    let offset = 0;       // how many articles we have already loaded
+
+    const container = document.getElementById("news-container");
+    const message = document.getElementById("message");
+
+    // 1. Fetch news from the REST API
+    async function loadNews() {
+      message.textContent = "Loading...";
+
+      try {
+        const response = await fetch(API_URL + "?limit=" + LIMIT + "&offset=" + offset);
+        const data = await response.json();
+
+        showArticles(data.results);   // 'results' is the array of articles
+        offset = offset + LIMIT;      // next time, load the next 5
+        message.textContent = "";
+      } catch (error) {
+        message.textContent = "Could not load news. Check your internet connection.";
+      }
+    }
+
+    // 2. Display each article on the page
+    function showArticles(articles) {
+      articles.forEach(function (article) {
+        const date = new Date(article.published_at).toLocaleDateString();
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML =
+          '<img src="' + article.image_url + '" alt="news image">' +
+          '<div class="card-body">' +
+            '<h2>' + article.title + '</h2>' +
+            '<p>' + article.summary + '</p>' +
+            '<p class="info">Source: ' + article.news_site + ' | Date: ' + date + '</p>' +
+            '<a href="' + article.url + '" target="_blank">Read full article</a>' +
+          '</div>';
+
+        container.appendChild(card);
+      });
+    }
+
+    // 3. Button events (no page reload)
+    document.getElementById("load-more").addEventListener("click", loadNews);
+
+    document.getElementById("refresh").addEventListener("click", function () {
+      container.innerHTML = "";   // clear old news
+      offset = 0;
+      loadNews();
+    });
+
+    // Load the first set of news when the page opens
+    loadNews();
+  </script>
+
+</body>
+</html>
